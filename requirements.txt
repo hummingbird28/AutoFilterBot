@@ -5,3 +5,4 @@ swibots
 pymongo
 umongo
 motor
+aiohttp

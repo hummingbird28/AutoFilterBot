@@ -18,7 +18,6 @@ def is_enabled(value, default):
 BOT_TOKEN = environ.get("BOT_TOKEN", "")
 
 # Bot settings
-CACHE_TIME = int(environ.get("CACHE_TIME", 300))
 USE_DESCRIPTION_FILTER = bool(environ.get("USE_DESCRIPTION_FILTER", True))
 PICS = (
     environ.get(
@@ -29,14 +28,9 @@ PICS = (
 
 # Admins, Channels & Users
 ADMINS = [int(admin) for admin in environ.get("ADMINS", "").split()]
-CHANNELS = [str(ch) for ch in environ.get("CHANNELS", "0").split()]
-auth_users = [int(user) for user in environ.get("AUTH_USERS", "").split()]
-AUTH_USERS = (auth_users + ADMINS) if auth_users else []
+CHATS = [str(ch) for ch in environ.get("CHATS", "0").split()]
+COMMUNITIES = [str(ch) for ch in environ.get("COMMUNITIES", "0").split()]
 
-auth_channel = environ.get("AUTH_CHANNEL")
-auth_grp = environ.get("AUTH_GROUP")
-AUTH_CHANNEL = auth_channel if auth_channel else None
-AUTH_GROUPS = [ch for ch in auth_grp.split()] if auth_grp else None
 
 DATABASE_URI = environ.get("DATABASE_URI", "")
 DATABASE_NAME = environ.get("DATABASE_NAME", "switch_movie_bot")

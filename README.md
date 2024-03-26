@@ -60,9 +60,6 @@ This bot is designed to perform various functions based on user interactions. Th
 
 - `ADMINS`: List of admin user IDs.
 - `CHANNELS`: List of channel IDs.
-- `AUTH_USERS`: List of authorized user IDs.
-- `AUTH_CHANNEL`: Chat ID for authorized channel.
-- `AUTH_GROUPS`: List of authorized group chat IDs.
 
 ### Database Configuration
 

@@ -5,7 +5,7 @@ import re
 import os
 from bs4 import BeautifulSoup as soup
 from swibots import InlineKeyboardButton, Message
-from config import AUTH_CHANNEL, LONG_IMDB_DESCRIPTION, MAX_LIST_ELM
+from config import LONG_IMDB_DESCRIPTION, MAX_LIST_ELM
 BTN_URL_REGEX = re.compile(
     r"(\[([^\[]+?)\]\((buttonurl|buttonalert):(?:/{0,2})(.+?)(:same)?\))"
 )

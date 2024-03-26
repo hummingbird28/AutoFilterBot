@@ -10,7 +10,16 @@ load_dotenv(env_file, override=True)
 
 import logging.config  # noqa : E402
 import logging  # noqa : E402
-from swibots import BotContext, CommandEvent, CallbackQueryEvent, Message, filters
+import swibots as s
+from swibots import (
+    BotContext,
+    CommandEvent,
+    CallbackQueryEvent,
+    Message,
+    filters,
+    InlineKeyboardButton,
+    InlineMarkup,
+)
 from swibots import BotCommand as RegisterCommand  # noqa : E402
 from config import ADMINS
 
@@ -30,6 +39,7 @@ app.set_bot_commands(
         RegisterCommand("search", "Search for indexed media", True),
         # help
         RegisterCommand("start", "Show help about commands", True),
+        RegisterCommand("miniapp", "Open APP", True),
         # imdb
         RegisterCommand("movie", "Search for a movie on IMDb", True),
         # filters
@@ -51,9 +61,30 @@ async def on_callback_query(ctx: BotContext[CallbackQueryEvent]):
     await message.delete()
 
 
+@app.on_command("miniapp")
+async def start(ctx: BotContext[CommandEvent]):
+    mId = ctx.event.message
+    await mId.reply_text(
+        "Click below button to open mini app.",
+        inline_markup=InlineMarkup(
+            [[InlineKeyboardButton("Open APP", callback_data="Home")]]
+        ),
+    )
+
+
 @app.on_command("start")
 async def start(ctx: BotContext[CommandEvent]):
+    mId = ctx.event.params
     message: Message = ctx.event.message
+    if mId and mId.isdigit():
+        try:
+            media = await app.get_media(mId)
+            media.id = 0
+            await message.reply_text("", media_info=media)
+        except Exception as er:
+            print(er, mId)
+            await message.send(f"Media not found!")
+        return
     text = (
         "Hello! here is a list of commands you can use:\n"
         + "/help - Show this message\n"
@@ -72,7 +103,14 @@ async def start(ctx: BotContext[CommandEvent]):
             + "/delallfilters - Delete all filters\n"
         )
 
-    await message.reply_text(text)
+    await message.reply_text(
+        text,
+        #                             inline_markup=s.InlineMarkup([[
+        #                               s.InlineKeyboardButton("Open APP",
+        #                                                       callback_data="Home")
+        #                         ]]
+        # )
+    )
 
 
 app.run()
