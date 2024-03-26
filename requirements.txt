@@ -6,3 +6,5 @@ pymongo
 umongo
 motor
 aiohttp
+aniparse
+guessit
