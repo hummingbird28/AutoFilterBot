@@ -26,6 +26,8 @@ PICS = (
     )
 ).split()
 
+TMDB_KEY = environ.get("TMDB_KEY")
+
 # Admins, Channels & Users
 ADMINS = [int(admin) for admin in environ.get("ADMINS", "").split()]
 CHATS = [str(ch) for ch in environ.get("CHATS", "0").split()]
