@@ -33,7 +33,7 @@ async def imdb_search(ctx: BotContext[CommandEvent]):
         mymessage = await message.reply_text(f"Searching for {params}...")
         await show_results(params, mymessage)
 
-@app.on_callback_query(filters.regexp('^search'))
+@app.on_callback_query(filters.regexp('^isearch'))
 async def imdb_search_callback(ctx: BotContext[CallbackQueryEvent]):
         _, search_params = ctx.event.callback_data.split('#')
         # delete the message
@@ -55,7 +55,7 @@ async def imdb_callback(ctx: BotContext[CallbackQueryEvent]):
             [
                 InlineKeyboardButton(
                     text=f"Back to Search",
-                    callback_data=f"search#{search_params}",
+                    callback_data=f"isearch#{search_params}",
                 )
             ]
         ]

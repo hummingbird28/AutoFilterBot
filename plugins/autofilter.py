@@ -12,9 +12,9 @@ from swibots import (
     MessageEvent,
     Media,
 )
-from config import ADMINS
+from config import ADMINS, CHATS, COMMUNITIES
 from utils import parser, split_quotes, get_channel_or_group
-from database.connections_mdb import active_connection
+from database.ia_filterdb import save_file
 from client import app
 from database.filters_mdb import (
     add_filter,
@@ -192,13 +192,18 @@ async def delete_all_index_confirm(ctx: BotContext[CallbackQueryEvent]):
 @app.on_message()
 async def autofilter_filter(ctx: BotContext[MessageEvent]):
     message = ctx.event.message
-    print(message)
+#    print(message)
 
     channel_or_group, is_group = await get_channel_or_group(message, app)
-    print(channel_or_group)
+#    print(channel_or_group)
     if not channel_or_group:
         return
     group_id = channel_or_group.id
+    if not (message.media_info):
+        return
+    if group_id in CHATS or ctx.event.community_id in COMMUNITIES:
+        await save_file(message.media_info)
+        return
     name = message.message
     reply_id = message.replied_to_id if message.replied_to_id > 0 else message.id
     keywords = await get_filters(group_id)
