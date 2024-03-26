@@ -10,8 +10,7 @@ from aiohttp import ClientSession
 from umongo import Instance, Document, fields
 from motor.motor_asyncio import AsyncIOMotorClient
 from marshmallow.exceptions import ValidationError
-from datetime import datetime as dt
-from config import DATABASE_URI, DATABASE_NAME, COLLECTION_NAME, USE_DESCRIPTION_FILTER
+from config import DATABASE_URI, DATABASE_NAME, COLLECTION_NAME, USE_DESCRIPTION_FILTER, TMDB_KEY
 
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ async def make_request(url):
             url,
             headers={
                 "accept": "application/json",
-                "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmZjQ3YjhhMjAyNjUwYWE2YTVkNmRjZjIzMGY4YzczNSIsInN1YiI6IjY2MDA2ZDczNjJmMzM1MDE3ZDUyOWU4OSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.X4LewyC8GcwZUqWQr6ojy1Ux1QnZb_dbfdWhKFkZ7CE",
+                "Authorization": f"Bearer {TMDB_KEY}",
             },
         ) as res:
             return await res.json()
