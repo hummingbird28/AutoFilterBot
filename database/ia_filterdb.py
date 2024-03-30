@@ -79,7 +79,7 @@ async def save_file(media: SwiMedia):
     meName = details.get("title")
     if not meName:
         details = parse(media.description)
-        meName = parse.get("anime_title")
+        meName = details.get("anime_title")
     print(meName)
     imdBid = None
     mname = None
