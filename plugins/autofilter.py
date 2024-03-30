@@ -127,7 +127,7 @@ async def autofilter_filters(ctx: BotContext[CommandEvent]):
         filterlist = f"There are no active filters in **{title}**"
 
     await message.reply_text(
-     filterlist,
+        filterlist,
     )
 
 
@@ -192,16 +192,21 @@ async def delete_all_index_confirm(ctx: BotContext[CallbackQueryEvent]):
 @app.on_message()
 async def autofilter_filter(ctx: BotContext[MessageEvent]):
     message = ctx.event.message
-#    print(message)
 
-    channel_or_group, is_group = await get_channel_or_group(message, app)
-#    print(channel_or_group)
-    if not channel_or_group:
+    #    print(message)
+    if message.receiver_id:
         return
-    group_id = channel_or_group.id
+    #   is_group = bool(message.group_id)
+    # print(message)
+    #    channel_or_group, is_group = await get_channel_or_group(message, app)
+    #    print(channel_or_group)
+    #  if not channel_or_group:
+    #     return
+    group_id = message.channel_id or message.group_id
     if not (message.media_info):
         return
-    if group_id in CHATS or ctx.event.community_id in COMMUNITIES:
+    print(message.community_id, COMMUNITIES)
+    if group_id in CHATS or message.community_id in COMMUNITIES:
         await save_file(message.media_info)
         return
     name = message.message
@@ -224,9 +229,11 @@ async def autofilter_filter(ctx: BotContext[MessageEvent]):
                             await message.reply_text(
                                 text.format(
                                     first=message.user.name,
-                                    username=None
-                                    if not message.user.username
-                                    else "@" + message.user.username,
+                                    username=(
+                                        None
+                                        if not message.user.username
+                                        else "@" + message.user.username
+                                    ),
                                     id=message.user.id,
                                     query=name,
                                 ),
@@ -236,9 +243,11 @@ async def autofilter_filter(ctx: BotContext[MessageEvent]):
                             await message.reply_text(
                                 text.format(
                                     first=message.user.name,
-                                    username=None
-                                    if not message.user.username
-                                    else "@" + message.user.username,
+                                    username=(
+                                        None
+                                        if not message.user.username
+                                        else "@" + message.user.username
+                                    ),
                                     id=message.user.id,
                                     query=name,
                                 ),
@@ -251,9 +260,11 @@ async def autofilter_filter(ctx: BotContext[MessageEvent]):
                                 fileid,
                                 caption=text.format(
                                     first=message.user.name,
-                                    username=None
-                                    if not message.user.username
-                                    else "@" + message.user.username,
+                                    username=(
+                                        None
+                                        if not message.user.username
+                                        else "@" + message.user.username
+                                    ),
                                     id=message.user.id,
                                     query=name,
                                 )
@@ -268,9 +279,11 @@ async def autofilter_filter(ctx: BotContext[MessageEvent]):
                                 fileid,
                                 caption=text.format(
                                     first=message.user.name,
-                                    username=None
-                                    if not message.user.username
-                                    else "@" + message.user.username,
+                                    username=(
+                                        None
+                                        if not message.user.username
+                                        else "@" + message.user.username
+                                    ),
                                     id=message.user.id,
                                     query=name,
                                 )
