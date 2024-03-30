@@ -64,6 +64,14 @@ async def onHome(ctx: BotContext[CallbackQueryEvent]):
             ]
         ),
     )
+    comps.append(
+       Button(
+           action="download",
+            text="Download Now",
+            downlaodFileName=details.description or details.file_name,
+            url=details.file_url
+        )
+    )
     await ctx.event.answer(
         callback=AppPage(
             components=comps,
