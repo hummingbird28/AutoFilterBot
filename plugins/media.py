@@ -40,6 +40,7 @@ async def show_movie_info(ctx: BotContext[CommandEvent]):
 
     await show_media_results(mymessage, params, "0", app)
 
+
 @app.on_message()
 async def onMessa(ctx: BotContext[MessageEvent]):
     ev = ctx.event.message
@@ -53,6 +54,7 @@ async def onMessa(ctx: BotContext[MessageEvent]):
     mymessage = await ev.reply_text(f"Searching for {params}...")
 
     await show_media_results(mymessage, params, "0", app)
+
 
 @app.on_callback_query(filters.regexp("^search_prev"))
 async def search_prev_callback(ctx: BotContext[CallbackQueryEvent]):
@@ -198,7 +200,12 @@ async def listenCallback(ctx: BotContext[CallbackQueryEvent]):
         f_caption = f"{file.file_name}"
 
     await app.send_message(
-        f_caption.strip(), user_id=ctx.event.action_by_id, media_info=media
+        f_caption.strip(),
+        user_id=ctx.event.action_by_id,
+        media_info=media,
+        inline_markup=InlineMarkup(
+            [[InlineKeyboardButton("Direct Download", url=file.file_url)]]
+        ),
     )
     await m.edit_inline_markup(
         InlineMarkup([[InlineKeyboardButton("Go to PM", ctx.user.link)]])
@@ -272,8 +279,8 @@ async def show_media_results(msg: Message, search: str, offset: str, app: BotApp
                             callback_data=f"search_next#{search}#{next_offset}",
                         )
                     )
-#                else:
- #                   pagination.append(InlineKeyboardButton(text="No more data"))
+                #                else:
+                #                   pagination.append(InlineKeyboardButton(text="No more data"))
 
                 if len(pagination) > 0:
                     results.append(pagination)
@@ -313,7 +320,7 @@ async def index_files_to_db(
                         channel_or_group.community_id,
                         msg.user_id,
                         page_size,
-                       offset,
+                        offset,
                     )
                 else:
                     history = await app.get_channel_chat_history(
@@ -321,7 +328,7 @@ async def index_files_to_db(
                         channel_or_group.community_id,
                         msg.user_id,
                         page_size,
-                       offset,
+                        offset,
                     )
                 print(history.messages, offset)
 
