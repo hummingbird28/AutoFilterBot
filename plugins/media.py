@@ -284,6 +284,7 @@ async def index_files_to_db(
     no_media = 0
     unsupported = 0
     idx = 0
+    offset = 0
     page_size = 100
     has_more = True
     # temp.CURRENT = 200
@@ -298,7 +299,7 @@ async def index_files_to_db(
                         channel_or_group.community_id,
                         msg.user_id,
                         page_size,
-                        current,
+                       offset,
                     )
                 else:
                     history = await app.get_channel_chat_history(
@@ -306,12 +307,14 @@ async def index_files_to_db(
                         channel_or_group.community_id,
                         msg.user_id,
                         page_size,
-                        current,
+                       offset,
                     )
+                print(history.messages, offset)
 
                 has_more = history.messages is not None and len(history.messages) > 0
 
                 if has_more:
+                    offset += 1
                     messages: List[Message] = history.messages
                     for message in messages:
                         if temp.CANCEL:
@@ -336,7 +339,7 @@ async def index_files_to_db(
                         if not message:
                             deleted += 1
                             continue
-                        elif not message.media_link:
+                        elif not message.media_info:
                             no_media += 1
                             continue
                         elif message.status not in [1, 2, 3, 7]:
