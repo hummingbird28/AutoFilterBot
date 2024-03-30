@@ -269,22 +269,22 @@ async def get_channel_or_group(message: Message, app):
         is_group = True
     else:
         await message.reply_text("This command is only available for channels and groups!")
-        return
+        return None, None
 
     # get the channel
     try:
         channel_or_group = await app.get_channel(channel_or_group_id)
         if channel_or_group is None:
             await message.reply_text(f"Channel {channel_or_group_id} not found!")
-            return
+            return None, None
     except Exception as e:
         try:
             channel_or_group = await app.get_group(channel_or_group_id)
             is_group = True
             if channel_or_group is None:
                 await message.reply_text(f"Group {channel_or_group_id} not found!")
-                return
+                return None, None
         except Exception as e:
             await message.reply_text(f"Channel or group {channel_or_group_id} not found!")
-            return
+            return None, None
     return channel_or_group, is_group
