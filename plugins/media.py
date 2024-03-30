@@ -9,6 +9,7 @@ from swibots import (
     InlineKeyboardButton,
     filters,
     Message,
+    MessageEvent,
     Group,
     Channel,
     CallbackQueryEvent,
@@ -39,6 +40,19 @@ async def show_movie_info(ctx: BotContext[CommandEvent]):
 
     await show_media_results(mymessage, params, "0", app)
 
+@app.on_message()
+async def onMessa(ctx: BotContext[MessageEvent]):
+    ev = ctx.event.message
+    if ev.media_info:
+        return
+    if not (ev.personal_chat or ev.group_id):
+        return
+    params = ev.message
+    if not params:
+        return
+    mymessage = await ev.reply_text(f"Searching for {params}...")
+
+    await show_media_results(mymessage, params, "0", app)
 
 @app.on_callback_query(filters.regexp("^search_prev"))
 async def search_prev_callback(ctx: BotContext[CallbackQueryEvent]):
