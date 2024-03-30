@@ -10,7 +10,13 @@ from aiohttp import ClientSession
 from umongo import Instance, Document, fields
 from motor.motor_asyncio import AsyncIOMotorClient
 from marshmallow.exceptions import ValidationError
-from config import DATABASE_URI, DATABASE_NAME, COLLECTION_NAME, USE_DESCRIPTION_FILTER, TMDB_KEY
+from config import (
+    DATABASE_URI,
+    DATABASE_NAME,
+    COLLECTION_NAME,
+    USE_DESCRIPTION_FILTER,
+    TMDB_KEY,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -91,24 +97,50 @@ async def save_file(media: SwiMedia):
             res = await make_search(name)
             selected, perc, index = process.extractOne(
                 name,
-                (f"{r.get('title') or r.get('name')}" for r in res["results"]),
+                (
+                    f"{r.get('title') or r.get('name')}"
+                    for r in sorted(
+                        res["results"],
+                        key=lambda r: (
+                            int(
+                                r["release_date"].split("-")[0],
+                            )
+                            if r.get("release_date")
+                            else -1
+                        ),
+                    )
+                ),
                 scorer=fuzz.token_sort_ratio,
             )
-            if not res['results'] or perc < 80:
+#            print(res["results"][index])
+            if not res["results"] or perc < 80:
                 res = await make_search(name, type="tv")
                 selected, perc, index = process.extractOne(
-                                name,
-                                (f"{r.get('title') or r.get('name')}" for r in res["results"]),
-                                scorer=fuzz.token_sort_ratio,
-                                processor=utils.default_process,
-                            )
+                    name,
+                    (
+                        f"{r.get('title') or r.get('name')}"
+                        for r in sorted(
+                            res["results"],
+                            key=lambda r: (
+                                int(
+                                    r["release_date"].split("-")[0],
+                                )
+                                if r.get("release_date")
+                                else -1
+                            ),
+                            reverse=True,
+                        )
+                    ),
+                    scorer=fuzz.token_sort_ratio,
+                    processor=utils.default_process,
+                )
                 isTv = True
             if perc >= 80:
                 syl = res["results"][index]
                 imdBid = syl["id"]
                 mname = syl.get("name") or syl.get("title") or syl.get("original_title")
                 poster = "https://image.tmdb.org/t/p/w220_and_h330_face/" + syl.get(
-                "poster_path"
+                    "poster_path"
                 )
         except Exception as er:
             print(er)
@@ -124,13 +156,14 @@ async def save_file(media: SwiMedia):
             thumbnail=poster or media.thumbnail_url or poster,
             description=media.description,
             file_url=media.url,
-            resolution=str(details.get("screen_size") or details.get("video_resolution", '')),
+            resolution=str(
+                details.get("screen_size") or details.get("video_resolution", "")
+            ),
             imdb_id=imdBid,
             movie_name=mname,
             tv_show="true" if isTv and imdBid else None,
             episode_id=details.get("episode_number") if isTv and imdBid else None,
-            season_id=details.get("anime_season") if isTv and imdBid else None
-            
+            season_id=details.get("anime_season") if isTv and imdBid else None,
         )
     except ValidationError as e:
         logger.exception("Error occurred while saving file in database")
