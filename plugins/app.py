@@ -1,6 +1,7 @@
 from client import app
 from swibots import *
 from database.ia_filterdb import get_search_results, get_file_details, getMovie
+from guessit import guessit
 
 
 def humanbytes(size):
@@ -16,6 +17,7 @@ def humanbytes(size):
         size = f"{size:.2f}{unit}B"
     return size
 
+
 @app.on_callback_query(regexp("vfile"))
 async def onHome(ctx: BotContext[CallbackQueryEvent]):
     fileId = ctx.event.callback_data.split("|")[-1]
@@ -26,8 +28,9 @@ async def onHome(ctx: BotContext[CallbackQueryEvent]):
     details = details[0]
     iData = {}
     if details.imdb_id:
-        iData = await getMovie(details.imdb_id,
-                               type="tv" if details.tv_show else "movie")
+        iData = await getMovie(
+            details.imdb_id, type="tv" if details.tv_show else "movie"
+        )
     #       print(iData)
     #    print(details)
     comps = []
@@ -46,7 +49,7 @@ async def onHome(ctx: BotContext[CallbackQueryEvent]):
         comps.append(Text(iD))
     if iD := iData.get("vote_average"):
         comps.append(Text(f"*Rating:* {iD} ⭐"))
-    if iD:= details.file_size:
+    if iD := details.file_size:
         comps.append(Text(f"*File Size:* {humanbytes(iD)}"))
     if iD := iData.get("release_date"):
         comps.append(Text(f"*Released on:* {iD}"))
@@ -65,11 +68,11 @@ async def onHome(ctx: BotContext[CallbackQueryEvent]):
         ),
     )
     comps.append(
-       Button(
-           action="download",
+        Button(
+            action="download",
             text="Download Now",
             downlaodFileName=details.description or details.file_name,
-            url=details.file_url
+            url=details.file_url,
         )
     )
     await ctx.event.answer(
@@ -84,10 +87,26 @@ async def makeListTiles(query="", max=25):
     results, _, __ = await get_search_results(query, max_results=max)
     gV = []
     for file in results:
+        details = guessit(file.description or file.file_name)
         gV.append(
             ListTile(
-                file.movie_name or file.description or file.file_name,
-                title_extra=f"Episode {file.episode_id}" if file.tv_show else None,
+                file.movie_name
+                or details.get("title")
+                or file.description
+                or file.file_name,
+                title_extra=(
+                    f"Episode {file.episode_id}"
+                    if (file.tv_show and file.episode_id)
+                    else (
+                        f"EP {details.get('episode', '')} | {details.get('episode_title', '')}".strip()
+                        if details.get("episode")
+                        else (
+                            " | ".join(details.get("other"))
+                            if isinstance(details.get("other"), list)
+                            else details.get("other", "")
+                        )
+                    )
+                ),
                 thumb=(
                     file.thumbnail
                     if file.thumbnail
@@ -97,11 +116,13 @@ async def makeListTiles(query="", max=25):
                         else "https://media.istockphoto.com/id/1147544810/vector/no-thumbnail-image-vector-graphic.jpg?s=612x612&w=0&k=20&c=2-ScbybM7bUYw-nptQXyKKjwRHKQZ9fEIwoWmZG9Zyg="
                     )
                 ),
-                description=f"File Size: {humanbytes(file.file_size)}",
+                description=f"File Size: {humanbytes(file.file_size)}"
+                + (f" | {details['year']}" if details.get("year") else ""),
                 callback_data=f"vfile|{file.file_id}",
             )
         )
     return gV
+
 
 def splitList(lis, part):
     nList = []
@@ -110,10 +131,11 @@ def splitList(lis, part):
         lis = lis[part:]
     return nList
 
+
 @app.on_callback_query(regexp("srch"))
 async def onHome(ctx: BotContext[CallbackQueryEvent]):
     comps = [SearchBar("Search files", callback_data="srch")]
-    index =  1
+    index = 1
     query = ctx.event.details.search_query
     if "|" in ctx.event.callback_data:
         query, index = ctx.event.callback_data.split("|")[1:]
@@ -135,33 +157,17 @@ async def onHome(ctx: BotContext[CallbackQueryEvent]):
                 bts.append(Button("Back", callback_data=f"srch|{query}|{index-1}"))
             if index < len(BOXES):
                 bts.append(Button("Next", callback_data=f"srch|{query}|{index+1}"))
-            comps.append(
-                ButtonGroup(bts)
-            )
+            comps.append(ButtonGroup(bts))
         else:
             comps.append(Text(f"No results found for {query}!", TextSize.SMALL))
-    await ctx.event.answer(
-        callback=AppPage(components=comps), new_page=not query
-    )
+    await ctx.event.answer(callback=AppPage(components=comps), new_page=not query)
 
 
 @app.on_callback_query(regexp("Home"))
 async def onHome(ctx: BotContext[CallbackQueryEvent]):
-    comps = [
-        SearchHolder("Search files..", callback_data="srch")
-    ]
+    comps = [SearchHolder("Search files..", callback_data="srch")]
     gv = await makeListTiles(max=50)
     if gv:
-        comps.append(
-            Text("Recently Uploaded", TextSize.SMALL)
-        )
-        comps.append(
-            ListView(
-                gv, ListViewType.LARGE
-            )
-        )
-    await ctx.event.answer(
-        callback=AppPage(
-            components=comps
-        )
-    )
+        comps.append(Text("Recently Uploaded", TextSize.SMALL))
+        comps.append(ListView(gv, ListViewType.LARGE))
+    await ctx.event.answer(callback=AppPage(components=comps))
