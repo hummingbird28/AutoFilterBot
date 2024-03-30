@@ -80,7 +80,13 @@ async def start(ctx: BotContext[CommandEvent]):
         try:
             media = await app.get_media(mId)
             media.id = 0
-            await message.reply_text("", media_info=media)
+            await message.reply_text(
+                f"{media.description or media.file_name}",
+                media_info=media,
+                inline_markup=InlineMarkup(
+                    [[InlineKeyboardButton("Direct Download", url=media.url)]]
+                ),
+            )
         except Exception as er:
             print(er, mId)
             await message.send(f"Media not found!")
