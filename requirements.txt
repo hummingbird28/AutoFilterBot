@@ -2,7 +2,7 @@ python-dotenv
 PyYAML==6.0
 IMDbPY==2022.7.9
 swibots
-pymongo
+pymongo[srv]
 umongo
 motor
 aiohttp
