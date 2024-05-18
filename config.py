@@ -98,3 +98,7 @@ LOG_STR += (
     else "Full List of casts and crew will be shown in imdb template, restrict them by adding a value to MAX_LIST_ELM\n"
 )
 LOG_STR += f"Your current IMDB template is {IMDB_TEMPLATE}"
+
+JOIN_COMMUNITY_USER = environ.get("JOIN_COMMUNITY_USERNAME", default="")
+INDEX_COMMUNITY_ID = environ.get("INDEX_COMMUNITY_ID", default="")
+INDEX_CHANNEL_ID = environ.get("INDEX_CHANNEL_ID", default="")
