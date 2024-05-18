@@ -22,17 +22,15 @@ from utils import get_size, temp, file_int_from_name, file_str_from_int
 from aiohttp import ClientSession
 from aiohttp_client_cache import CacheBackend, SQLiteBackend, CachedSession
 from base64 import urlsafe_b64encode
+
 # from rapidfuzz.fuzz import token_ratio
 
-from config import ADMINS, CUSTOM_FILE_CAPTION
+from config import ADMINS, CUSTOM_FILE_CAPTION, MOVIEFLIX, MOVIEHUB
 from swibots import Media as SwiMedia
 import logging
 from client import app
 
 lock = asyncio.Lock()
-
-HUB_BOT = "tamilhub_bot"
-FLIX_BOT = "tamilflix_bot"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -290,60 +288,61 @@ async def show_media_results(msg: Message, search: str, offset: str, app: BotApp
                 )
             ]
         )
-        
-    try:
-        tz = []
-        url = f"https://api.themoviedb.org/3/search/movie?query={search.replace(' ', '+')}&include_adult=false&language=en-US&page=1"
-        data = await make_request(url)
-        for move in data["results"][:3]:
-            tz.append(
-                [
-                    InlineKeyboardButton(
-                        f"*{move['title']}* 🈸",
-                        url=f"https://iswitch.click/{FLIX_BOT}?frommovielink={urlsafe_b64encode(str(move['id']).encode()).decode()}",
-                    )
-                ]
-            )
-        if tz:
-            results.append(
-                [
-                    InlineKeyboardButton(
-                        "*--- Tamil Flix 🅰️ ---*",
-                    )
-                ]
-            )
-            results.extend(tz)
-    except Exception as er:
-        print(er)
 
-    try:
-        tz = []
-        data = await searchMovieMax(f"https://5movierulz.vet/?s={search}")
-#        print(data)
-        for dt in data[:3]:
-            print(dt['id'])
-            tz.append(
-                [
-                    InlineKeyboardButton(
-                        f"*{dt['title']}* 🈸",
-                        url=f"https://iswitch.click/{HUB_BOT}?frommovielink={urlsafe_b64encode(str(dt['id']).encode()).decode()}"
-                    )
-                ]
-            )
-        if tz:
-            print(tz)
-            results.append(
-                [
-                    InlineKeyboardButton(
-                        "*--- Tamil Hub 🅰️ ---*",
-                    )
-                ]
-            )
-            results.extend(tz)
+    if MOVIEFLIX:
+        try:
+            tz = []
+            url = f"https://api.themoviedb.org/3/search/movie?query={search.replace(' ', '+')}&include_adult=false&language=en-US&page=1"
+            data = await make_request(url)
+            for move in data["results"][:3]:
+                tz.append(
+                    [
+                        InlineKeyboardButton(
+                            f"*{move['title']}* 🈸",
+                            url=f"https://iswitch.click/{MOVIEFLIX}?frommovielink={urlsafe_b64encode(str(move['id']).encode()).decode()}",
+                        )
+                    ]
+                )
+            if tz:
+                results.append(
+                    [
+                        InlineKeyboardButton(
+                            "*--- Movie Flix 🅰️ ---*",
+                        )
+                    ]
+                )
+                results.extend(tz)
+        except Exception as er:
+            print(er)
+    if MOVIEHUB:
+        try:
+            tz = []
+            data = await searchMovieMax(f"https://5movierulz.vet/?s={search}")
+            #        print(data)
+            for dt in data[:3]:
+                print(dt["id"])
+                tz.append(
+                    [
+                        InlineKeyboardButton(
+                            f"*{dt['title']}* 🈸",
+                            url=f"https://iswitch.click/{MOVIEHUB}?frommovielink={urlsafe_b64encode(str(dt['id']).encode()).decode()}",
+                        )
+                    ]
+                )
+            if tz:
+                print(tz)
+                results.append(
+                    [
+                        InlineKeyboardButton(
+                            "*--- Movie Hub 🅰️ ---*",
+                        )
+                    ]
+                )
+                results.extend(tz)
 
-    except Exception as er:
-        logger.error("error on movie max")
-        logger.exception(er)
+        except Exception as er:
+            logger.error("error on movie max")
+            logger.exception(er)
 
     if results:
         pm_text = f"📁 Results - {len(results)}"

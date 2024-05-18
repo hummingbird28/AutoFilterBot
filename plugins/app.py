@@ -2,7 +2,7 @@ from client import app, hasJoined
 from swibots import *
 from database.ia_filterdb import get_search_results, get_file_details, getMovie
 from guessit import guessit
-
+from config import JOIN_COMMUNITY_USER
 
 def humanbytes(size):
     if not size:
@@ -25,7 +25,7 @@ async def showJoinPage(ctx: BotContext[CallbackQueryEvent]):
                 f"🤖 Please join below community in order to use this bot!",
                 TextSize.SMALL,
             ),
-            Button("Join Community", url="https://iswitch.click/tamil_links_official"),
+            Button("Join Community", url=f"https://iswitch.click/{JOIN_COMMUNITY_USER}"),
             Spacer(y=20),
             Text("After joining, reopen the app to perform any action!")
         ]
