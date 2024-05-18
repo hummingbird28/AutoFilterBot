@@ -102,3 +102,6 @@ LOG_STR += f"Your current IMDB template is {IMDB_TEMPLATE}"
 JOIN_COMMUNITY_USER = environ.get("JOIN_COMMUNITY_USERNAME", default="")
 INDEX_COMMUNITY_ID = environ.get("INDEX_COMMUNITY_ID", default="")
 INDEX_CHANNEL_ID = environ.get("INDEX_CHANNEL_ID", default="")
+
+MOVIEFLIX  = environ.get("MOVIEFLIX", default="")
+MOVIEHUB = environ.get("MOVIEHUB", default="")
