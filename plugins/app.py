@@ -1,4 +1,4 @@
-from client import app
+from client import app, hasJoined
 from swibots import *
 from database.ia_filterdb import get_search_results, get_file_details, getMovie
 from guessit import guessit
@@ -18,9 +18,31 @@ def humanbytes(size):
     return size
 
 
+async def showJoinPage(ctx: BotContext[CallbackQueryEvent]):
+    if not await hasJoined(ctx.event.action_by_id):
+        comps = [
+            Text(
+                f"🤖 Please join below community in order to use this bot!",
+                TextSize.SMALL,
+            ),
+            Button("Join Community", url="https://iswitch.click/tamil_links_official"),
+            Spacer(y=20),
+            Text("After joining, reopen the app to perform any action!")
+        ]
+        await ctx.event.answer(
+            callback=AppPage(
+                components=comps,
+            )
+        )
+        return False
+    return True
+
+
 @app.on_callback_query(regexp("vfile"))
 async def onHome(ctx: BotContext[CallbackQueryEvent]):
     fileId = ctx.event.callback_data.split("|")[-1]
+    if not await showJoinPage(ctx):
+        return
     details = await get_file_details(int(fileId))
     if not details:
         await ctx.event.answer("File not found", show_alert=True)
@@ -90,8 +112,7 @@ async def makeListTiles(query="", max=25):
         details = guessit(file.description or file.file_name)
         gV.append(
             ListTile(
-                file.movie_name
-                or details.get("title")
+                details.get("title") or file.movie_name
                 or file.description
                 or file.file_name,
                 title_extra=(
@@ -134,6 +155,8 @@ def splitList(lis, part):
 
 @app.on_callback_query(regexp("srch"))
 async def onHome(ctx: BotContext[CallbackQueryEvent]):
+    if not await showJoinPage(ctx):
+        return
     comps = [SearchBar("Search files", callback_data="srch")]
     index = 1
     query = ctx.event.details.search_query
@@ -165,8 +188,10 @@ async def onHome(ctx: BotContext[CallbackQueryEvent]):
 
 @app.on_callback_query(regexp("Home"))
 async def onHome(ctx: BotContext[CallbackQueryEvent]):
+    if not await showJoinPage(ctx):
+        return
     comps = [SearchHolder("Search files..", callback_data="srch")]
-    gv = await makeListTiles(max=50)
+    gv = await makeListTiles(max=150)
     if gv:
         comps.append(Text("Recently Uploaded", TextSize.SMALL))
         comps.append(ListView(gv, ListViewType.LARGE))

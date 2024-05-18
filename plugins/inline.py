@@ -10,7 +10,7 @@ from swibots import (
     InlineQueryAnswer,
 )
 from database.ia_filterdb import get_search_results
-from utils import is_subscribed, get_size, temp, file_int_from_name, file_str_from_int
+from utils import get_size, file_int_from_name, file_str_from_int
 from config import CUSTOM_FILE_CAPTION
 from client import app
 

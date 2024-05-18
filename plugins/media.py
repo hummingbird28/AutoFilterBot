@@ -14,14 +14,25 @@ from swibots import (
     Channel,
     CallbackQueryEvent,
 )
-from database.ia_filterdb import save_file, Media, get_search_results
+from bs4 import BeautifulSoup as soup
+from database.ia_filterdb import save_file, Media, get_search_results, make_request
 from utils import get_size, temp, file_int_from_name, file_str_from_int
+
+# from rapidfuzz.process import extract
+from aiohttp import ClientSession
+from aiohttp_client_cache import CacheBackend, SQLiteBackend, CachedSession
+from base64 import urlsafe_b64encode
+# from rapidfuzz.fuzz import token_ratio
+
 from config import ADMINS, CUSTOM_FILE_CAPTION
 from swibots import Media as SwiMedia
 import logging
 from client import app
 
 lock = asyncio.Lock()
+
+HUB_BOT = "tamilhub_bot"
+FLIX_BOT = "tamilflix_bot"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -212,6 +223,29 @@ async def listenCallback(ctx: BotContext[CallbackQueryEvent]):
     )
 
 
+async def searchMovieMax(url, page=1):
+    async with CachedSession(cache=SQLiteBackend("urlcache")) as ses:
+        async with ses.get(url) as res:
+            data = soup(await res.read(), "html.parser", from_encoding="utf8")
+    movies = []
+    dattt = data.find("div", "entry-content") or data.find("div", "featured")
+    if not dattt:
+        return []
+    for item in dattt.find_all("li"):
+        atag = item.find("a")
+        img = atag.find("img")
+        if not img:
+            continue
+        movies.append(
+            {
+                "title": atag.get("title"),
+                "id": atag.get("href").split("/")[-2],
+                "image": img.get("src"),
+            }
+        )
+    return movies
+
+
 async def show_media_results(msg: Message, search: str, offset: str, app: BotApp):
     page_size = 7
     results = []
@@ -248,7 +282,7 @@ async def show_media_results(msg: Message, search: str, offset: str, app: BotApp
         results.append(
             [
                 InlineKeyboardButton(
-                    file.description,
+                    f"*[{size}] {file.description}*",
                     url=f"https://iswitch.click/{app.user.user_name}?start={file.file_id}",
                     #                callback_data=f"blk_{file.file_id}"
                     # text=f'📁 Name: {f_caption} Size: {get_size(file.file_size)}\nType: {file_str_from_int(file.file_type)}',
@@ -256,9 +290,63 @@ async def show_media_results(msg: Message, search: str, offset: str, app: BotApp
                 )
             ]
         )
+        
+    try:
+        tz = []
+        url = f"https://api.themoviedb.org/3/search/movie?query={search.replace(' ', '+')}&include_adult=false&language=en-US&page=1"
+        data = await make_request(url)
+        for move in data["results"][:3]:
+            tz.append(
+                [
+                    InlineKeyboardButton(
+                        f"*{move['title']}* 🈸",
+                        url=f"https://iswitch.click/{FLIX_BOT}?frommovielink={urlsafe_b64encode(str(move['id']).encode()).decode()}",
+                    )
+                ]
+            )
+        if tz:
+            results.append(
+                [
+                    InlineKeyboardButton(
+                        "*--- Tamil Flix 🅰️ ---*",
+                    )
+                ]
+            )
+            results.extend(tz)
+    except Exception as er:
+        print(er)
+
+    try:
+        tz = []
+        data = await searchMovieMax(f"https://5movierulz.vet/?s={search}")
+#        print(data)
+        for dt in data[:3]:
+            print(dt['id'])
+            tz.append(
+                [
+                    InlineKeyboardButton(
+                        f"*{dt['title']}* 🈸",
+                        url=f"https://iswitch.click/{HUB_BOT}?frommovielink={urlsafe_b64encode(str(dt['id']).encode()).decode()}"
+                    )
+                ]
+            )
+        if tz:
+            print(tz)
+            results.append(
+                [
+                    InlineKeyboardButton(
+                        "*--- Tamil Hub 🅰️ ---*",
+                    )
+                ]
+            )
+            results.extend(tz)
+
+    except Exception as er:
+        logger.error("error on movie max")
+        logger.exception(er)
 
     if results:
-        pm_text = f"📁 Results - {total}"
+        pm_text = f"📁 Results - {len(results)}"
         if string:
             pm_text += f" for {string}"
         try:

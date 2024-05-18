@@ -12,10 +12,11 @@ from swibots import (
     MessageEvent,
     Media,
 )
-from config import ADMINS, CHATS, COMMUNITIES
+from config import ADMINS, CHATS, COMMUNITIES, INDEX_CHANNEL_ID, INDEX_COMMUNITY_ID
 from utils import parser, split_quotes, get_channel_or_group
 from database.ia_filterdb import save_file
 from client import app
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from database.filters_mdb import (
     add_filter,
     get_filters,
@@ -31,7 +32,7 @@ logger = logging.getLogger(__name__)
 @app.on_command("addfilter")
 async def add_autofilter_filter(ctx: BotContext[CommandEvent]):
     message = ctx.event.message
-    print(message)
+    #    print(message)
     if ADMINS is None or message.user_id not in ADMINS:
         await message.reply_text("You are not allowed to use this command!")
         return
@@ -296,3 +297,29 @@ async def autofilter_filter(ctx: BotContext[MessageEvent]):
                 break
     else:
         return False
+
+
+lastIndex = None
+
+
+async def addFetchJob():
+    global lastIndex
+    messages = await app.get_channel_chat_history(
+        INDEX_COMMUNITY_ID, INDEX_CHANNEL_ID, page_limit=50
+    )
+    for message in messages.messages:
+        if lastIndex and message.id < lastIndex:
+            break
+        if message.media_info:
+            try:
+                await save_file(message.media_info)
+            except Exception as er:
+                logger.exception(er)
+    if messages.messages:
+        lastIndex = messages.messages[0].id
+
+
+if INDEX_COMMUNITY_ID and INDEX_CHANNEL_ID:
+    sched = AsyncIOScheduler()
+    sched.add_job(addFetchJob, "interval", minutes=3)
+    sched.start()
